@@ -1,0 +1,73 @@
+@charset "UTF-8";
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #222;
+  color: #ddd;
+  font: 500 24px/1.2 "Helvetica Neue", "ヒラギノ角ゴシック", sans-serif; }
+
+#container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%; }
+
+#balloonContainer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  z-index: 30; }
+
+.balloon {
+  width: calc( 100% - 32px);
+  padding: 2px 8px;
+  margin: 8px;
+  border-radius: 4px;
+  opacity: 0.9;
+  color: #fff;
+  cursor: pointer;
+  animation: ani-balloon-start 0.2s; }
+  .balloon.end {
+    animation: ani-balloon-end 0.2s; }
+  .balloon .title {
+    font-size: 18px;
+    font-weight: bold; }
+  .balloon .message {
+    font-size: 12px; }
+
+@keyframes ani-balloon-start {
+  0% {
+    transform: translateX(40px);
+    opacity: 0.0; }
+  100% {
+    transform: translateX(0px);
+    opacity: 0.9; } }
+
+@keyframes ani-balloon-end {
+  0% {
+    transform: scale(1);
+    opacity: 0.9; }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.0; } }
+
+#editorDiv {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc( 100% - 256px);
+  height: 100%; }
+
+#canvasContainer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 256px;
+  height: 100%;
+  overflow: scroll; }
+
+.canvas {
+  display: block; }

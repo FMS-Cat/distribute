@@ -1,98 +1,123 @@
-( function() {
+'use strict';
 
-  'use strict';
+let gulp = require( 'gulp' );
 
-  let gulp = require( 'gulp' );
+let browserify = require( 'browserify' );
+let watchify = require( 'watchify' );
+let babelify = require( 'babelify' );
+let sass = require( 'gulp-sass' );
+let source = require( 'vinyl-source-stream' );
 
-  let browserify = require( 'browserify' );
-  let watchify = require( 'watchify' );
-  let babelify = require( 'babelify' );
-  let sassify = require( 'sassify' );
-  let rename = require( 'gulp-rename' );
-  let source = require( 'vinyl-source-stream' );
+let browserSync = require( 'browser-sync' );
 
-  let browserSync = require( 'browser-sync' );
+// ---
 
-  let server = require( 'gulp-develop-server' );
+gulp.task( 'static-build',function() {
+  gulp.src( [ './src/static/**/*' ] )
+  .pipe( gulp.dest( './dist' ) );
+} );
 
-  // ------
+gulp.task( 'static-watch', function() {
+  gulp.watch( './src/static/**', [ 'static-build' ] );
+} );
 
-  gulp.task( 'browserify', function() {
-    let b = watchify( browserify( {
-      'cache': {},
-      'packageCache': {},
-      'fullPaths': true,
-      'entries': [ './src/main.js' ],
-      'plugin': [ 'watchify' ],
-      'transform': [
-        [ babelify, {
-          'presets': 'es2015'
-        } ],
-        [ sassify, {
-          'auto-inject': true,
-          'base64Encode': false,
-          'sourceMap': false
-        } ]
-      ]
-    } ) );
+// ---
 
-    let bundle = function() {
-      console.log( '🔮 Browserify!' );
-      b.bundle()
-      .on( 'error', function( _error ) {
-        console.error( _error );
-        this.emit( 'end' );
-      } )
-      .pipe( source( 'main.js' ) )
-      .pipe( gulp.dest( './dist' ) );
-    }
+gulp.task( 'style-build', function() {
+  return gulp.src( './src/style/main.scss' )
+  .pipe( sass().on( 'error', sass.logError ) )
+  .pipe( gulp.dest( './dist' ) )
+  .pipe( browserSync.stream() )
+} );
 
-    bundle();
+gulp.task( 'style-watch', function() {
+  gulp.watch( './src/style/**', [ 'style-build' ] );
+} );
 
-    b.on( 'update', function() {
-      bundle();
-    } );
+// ---
 
-    b.on( 'log', function( _log ) {
-      console.log( '🍕 ' + _log );
-    } );
+let brwsrfy = browserify( {
+  cache: {},
+  packageCache: {},
+  fullPaths: true,
+  entries: [ './src/script/main.js' ],
+  transform: [
+    [ babelify, {
+      presets: 'es2015'
+    } ]
+  ]
+} );
+
+gulp.task( 'script-build', function() {
+  brwsrfy.bundle()
+  .on( 'error', function( _error ) {
+    console.error( _error );
+    this.emit( 'end' );
+  } )
+  .pipe( source( 'main.js' ) )
+  .pipe( gulp.dest( './dist' ) );
+} );
+
+gulp.task( 'script-watch', function() {
+  let wtcfy = watchify( brwsrfy );
+
+  wtcfy.on( 'update', function() {
+    console.log( '🔮 Browserify!' );
+    wtcfy.bundle()
+    .on( 'error', function( _error ) {
+      console.error( _error );
+      this.emit( 'end' );
+    } )
+    .pipe( source( 'main.js' ) )
+    .pipe( gulp.dest( './dist' ) );
   } );
 
-  // ------
-
-  gulp.task( 'browser-init', function() {
-    browserSync.init( {
-      proxy: 'localhost:3000'
-    } );
+  wtcfy.on( 'log', function( _log ) {
+    console.log( '🍕 ' + _log );
   } );
+} );
 
-  gulp.task( 'browser-reload', function() {
-    browserSync.reload();
+// ---
+
+gulp.task( 'browser-init', function() {
+  browserSync.init( {
+    server: './dist'
   } );
+} );
 
-  gulp.task( 'browser-watch', function() {
-    gulp.watch( [ './dist/**' ], [ 'browser-reload' ] );
-  } );
+gulp.task( 'browser-reload', function() {
+  browserSync.reload();
+} );
 
-  // ------
+gulp.task( 'browser-watch', function() {
+  gulp.watch( [ './dist/**', '!./dist/**/*.css' ], [ 'browser-reload' ] );
+} );
 
-  gulp.task( 'node-start', function() {
-    server.listen( { path: './index.js' } );
-  } );
+// ---
 
-  gulp.task( 'node-restart', function() {
-    server.restart();
-  } );
+gulp.task( 'watch', [
+  'static-watch',
+  'style-watch',
+  'script-watch'
+] );
 
-  gulp.task( 'node-watch', function() {
-    gulp.watch( [ './*' ], [ 'node-restart' ] );
-  } );
+gulp.task( 'build', [
+  'static-build',
+  'style-build',
+  'script-build'
+] );
 
-  // ------
+gulp.task( 'browser', [
+  'browser-init',
+  'browser-watch'
+] );
 
-  gulp.task( 'watch', [ 'browserify', 'browser-watch', 'node-watch' ] );
+gulp.task( 'dev', [
+  'build',
+  'watch',
+  'browser'
+] );
 
-  gulp.task( 'dev', [ 'node-start', 'browser-init', 'watch' ] );
-  gulp.task( 'default', [ 'dev' ] );
-
-} )();
+gulp.task( 'default', [
+  'dev'
+] );
