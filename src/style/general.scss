@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  background: #222;
+  color: #ddd;
+  font: 500 24px/1.2 "Helvetica Neue", "ヒラギノ角ゴシック", sans-serif;
+}
+
+#container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
